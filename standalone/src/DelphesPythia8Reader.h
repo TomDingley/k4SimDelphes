@@ -102,9 +102,11 @@ public:
         reader = new DelphesLHEFReader;
         reader->SetInputFile(m_inputFile);
 
-        m_brancheEventLHEF = m_treeWriter->NewBranch("EventLHEF", LHEFEvent::Class());
-        m_branchWeightLHEF = m_treeWriter->NewBranch("WeightLHEF", LHEFWeight::Class());
-
+        brancheEventLHEF = m_treeWriter->NewBranch("EventLHEF", LHEFEvent::Class());
+        branchWeightLHEF = m_treeWriter->NewBranch("WeightLHEF", LHEFWeight::Class());
+        if (!branchWeightLHEF) {
+          std::cerr << "[ERROR] branchWeightLHEF failed to initialize!" << std::endl;
+        }
         m_allParticleOutputArrayLHEF    = modularDelphes->ExportArray("allParticlesLHEF");
         m_stableParticleOutputArrayLHEF = modularDelphes->ExportArray("stableParticlesLHEF");
         m_partonOutputArrayLHEF         = modularDelphes->ExportArray("partonsLHEF");
@@ -145,7 +147,19 @@ public:
         fillParticle(m_spareMode1, m_spareParm1, m_spareParm2, m_pythia->event, m_pythia->particleData, m_pythia->rndm);
       }
     }
-
+    
+    //  TOM: reading weights
+   if (reader) {
+    if (branchWeightLHEF) {
+        branchWeightLHEF->Clear();
+        std::cout << "[DEBUG] Calling AnalyzeWeight() for event " << m_eventCounter << std::endl;
+        reader->AnalyzeWeight(branchWeightLHEF);
+        std::cout << "[DEBUG] Forcing Tree Fill for WeightLHEF branch" << std::endl;
+        m_treeWriter->Fill();
+    } else {
+        std::cerr << "[ERROR] branchWeightLHEF is NULL!" << std::endl;
+    }
+    }
     if (!m_pythia->next()) {
       // If failure because reached end of file then exit event loop
       if (m_pythia->info.atEndOfFile()) {
@@ -163,7 +177,6 @@ public:
       }
     }
     m_readStopWatch.Stop();
-    m_procStopWatch.Start();
     ConvertInput(m_eventCounter, m_pythia.get(), m_branchEvent.get(), factory, allParticleOutputArray,
                  stableParticleOutputArray, partonOutputArray, &m_readStopWatch, &m_procStopWatch);
     ++m_eventCounter;
@@ -182,9 +195,10 @@ private:
   TStopwatch                        m_readStopWatch, m_procStopWatch;
   ExRootTreeWriter*                 m_treeWriter{nullptr};
   std::unique_ptr<ExRootTreeBranch> m_branchEvent{nullptr};
+  ExRootTreeBranch *branchEventLHEF = 0, *branchWeight = 0;
   std::unique_ptr<TTree>            m_converterTree{nullptr};
 
-  ExRootTreeBranch *m_brancheEventLHEF = 0, *m_branchWeightLHEF = 0;
+  ExRootTreeBranch *brancheEventLHEF = 0, *branchWeightLHEF = 0;
   TObjArray *m_stableParticleOutputArrayLHEF = 0, *m_allParticleOutputArrayLHEF = 0, *m_partonOutputArrayLHEF = 0;
   DelphesLHEFReader* reader = 0;
   Long64_t           m_eventCounter{0}, m_errorCounter{0};

@@ -126,7 +126,7 @@ namespace k4SimDelphes {
     }
   }
 
-  void DelphesEDM4HepConverter::process(TTree* delphesTree) {
+  void DelphesEDM4HepConverter::process(TTree* delphesTree, int iEvent) {
     // beginning of processing: clear previous event from containers
     m_collections.clear();
 
@@ -135,11 +135,11 @@ namespace k4SimDelphes {
 
     //filling the event header
     auto* eventBranch = delphesTree->GetBranch("Event");
-
     if (eventBranch) {
       auto* delphesEvents = *(TClonesArray**)eventBranch->GetAddress();
       auto* delphesEvent  = static_cast<HepMCEvent*>(delphesEvents->At(0));
-      createEventHeader(delphesEvent);
+      
+      createEventHeader(delphesEvent, delphesTree, iEvent);
     }
 
     for (const auto& branch : m_branches) {
@@ -166,14 +166,52 @@ namespace k4SimDelphes {
   }
 
   //convert the eventHeader with metaData
-  void DelphesEDM4HepConverter::createEventHeader(const HepMCEvent* delphesEvent) {
+  void DelphesEDM4HepConverter::createEventHeader(const HepMCEvent* delphesEvent, TTree* delphesTree, int iEvent) {
+    // Create the EDM4hep event header collection and a new event object
     auto* collection = createCollection<edm4hep::EventHeaderCollection>(EVENTHEADER_NAME);
     auto  cand       = collection->create();
 
+    // Set basic event properties
     cand.setWeight(delphesEvent->Weight);
     cand.setEventNumber(delphesEvent->Number);
-  }
 
+    // Extract LHE weights
+    if (TBranch* weightBranch = delphesTree->GetBranch("WeightLHEF")) {
+        TClonesArray* weightsArray = nullptr;
+        weightBranch->SetAddress(&weightsArray);
+        weightBranch->GetEntry(iEvent); // Use the event index from the loop
+
+        if (weightsArray && weightsArray->GetEntries() > 0) {
+            std::cout << "[DEBUG] Number of weights in WeightLHEF: " << weightsArray->GetEntries() << std::endl;
+
+            std::vector<int> weightIDs;     // Store IDs separately
+            std::vector<float> weightValues; // Store values separately
+
+            for (int i = 0; i < weightsArray->GetEntries(); ++i) {
+                if (auto* lhefWeight = static_cast<LHEFWeight*>(weightsArray->At(i))) {
+                    std::cout << "[DEBUG] Weight " << i << " -> ID: " << lhefWeight->ID
+                              << ", Value: " << lhefWeight->Weight << std::endl;
+
+                    weightIDs.push_back(lhefWeight->ID);
+                    weightValues.push_back(lhefWeight->Weight);
+                } else {
+                    std::cerr << "[ERROR] Null pointer encountered in WeightLHEF array at index " << i << std::endl;
+                }
+            }
+
+            // Store weights in the event header
+            for (float w : weightValues) {
+                cand.addToWeights(w);
+            }
+
+        } else {
+            std::cerr << "[WARNING] WeightLHEF branch is empty for this event or could not be retrieved." << std::endl;
+        }
+    } else {
+        std::cerr << "[ERROR] 'WeightLHEF' branch not found in the input TTree!" << std::endl;
+    }
+  }
+  
   void DelphesEDM4HepConverter::processParticles(const TClonesArray* delphesCollection, std::string const& branch) {
     auto* collection = createCollection<edm4hep::MCParticleCollection>(branch);
 

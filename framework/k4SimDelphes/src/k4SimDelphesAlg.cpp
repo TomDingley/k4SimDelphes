@@ -48,6 +48,8 @@ StatusCode k4SimDelphesAlg::initialize() {
 
 StatusCode k4SimDelphesAlg::execute(const EventContext&) const {
   verbose() << "Execute k4SimDelphesAlg... " << endmsg;
+  static int iEvent = 0;  
+
   m_allParticleOutputArray->Clear();
   m_stableParticleOutputArray->Clear();
   m_partonOutputArray->Clear();
@@ -65,7 +67,7 @@ StatusCode k4SimDelphesAlg::execute(const EventContext&) const {
   m_Delphes->ProcessTask();
   ///-- conversion of the output --/////////////////////////////////////////////
   verbose() << "Running converter" << endmsg;
-  m_edm4hepConverter->process(m_converterTree);
+  m_edm4hepConverter->process(m_converterTree, iEvent);
   // setup output collections
 
   auto collections = m_edm4hepConverter->getCollections();
@@ -83,6 +85,7 @@ StatusCode k4SimDelphesAlg::execute(const EventContext&) const {
     m_podioDataSvc->registerObject("/Event", "/" + std::string(c.first), wrapper).ignore();
   }
   m_Delphes->Clear();
+  iEvent++;
 
   return StatusCode::SUCCESS;
 }

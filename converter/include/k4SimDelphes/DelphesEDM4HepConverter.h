@@ -92,7 +92,7 @@ namespace k4SimDelphes {
     /**
      * Process the passed delphesTree and convert the particles contained in it.
      */
-    void process(TTree* delphesTree);
+    void process(TTree* delphesTree, int iEvent);
 
     /** Get the converted collections and their ownership.
      *
@@ -106,8 +106,7 @@ namespace k4SimDelphes {
         const std::unordered_map<UInt_t, edm4hep::MCParticle>& mc_map);
 
   private:
-    void createEventHeader(const HepMCEvent* delphesEvent);
-
+    void createEventHeader(const HepMCEvent* delphesEvent, TTree* delphesTree, int iEvent);
     void processParticles(const TClonesArray* delphesCollection, std::string const& branch);
     void processTracks(const TClonesArray* delphesCollection, std::string const& branch);
     void processPFlowCandidates(const TClonesArray* delphesCollection, std::string const& branch);
