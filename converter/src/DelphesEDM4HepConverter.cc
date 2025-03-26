@@ -126,20 +126,28 @@ namespace k4SimDelphes {
     }
   }
 
-  void DelphesEDM4HepConverter::process(TTree* delphesTree, int iEvent) {
+  void DelphesEDM4HepConverter::process(TTree* delphesTree) {
     // beginning of processing: clear previous event from containers
     m_collections.clear();
 
     // Make sure the shared collections are present
     registerGlobalCollections();
 
-    //filling the event header
+    // Retrieve event header from the "Event" branch
     auto* eventBranch = delphesTree->GetBranch("Event");
     if (eventBranch) {
       auto* delphesEvents = *(TClonesArray**)eventBranch->GetAddress();
       auto* delphesEvent  = static_cast<HepMCEvent*>(delphesEvents->At(0));
       
-      createEventHeader(delphesEvent, delphesTree, iEvent);
+      // Retrieve the weights array from the "WeightLHEF" branch
+      auto* weightBranch = delphesTree->GetBranch("WeightLHEF");
+      TClonesArray* lhefWeights = nullptr;
+      if (weightBranch) {
+        lhefWeights = *(TClonesArray**)weightBranch->GetAddress();
+      }
+      
+      // Now pass the weights array into createEventHeader
+      createEventHeader(delphesEvent, lhefWeights);
     }
 
     for (const auto& branch : m_branches) {
@@ -166,7 +174,7 @@ namespace k4SimDelphes {
   }
 
   //convert the eventHeader with metaData
-  void DelphesEDM4HepConverter::createEventHeader(const HepMCEvent* delphesEvent, TTree* delphesTree, int iEvent) {
+  void DelphesEDM4HepConverter::createEventHeader(const HepMCEvent* delphesEvent, TClonesArray* lhefWeights) {
     // Create the EDM4hep event header collection and a new event object
     auto* collection = createCollection<edm4hep::EventHeaderCollection>(EVENTHEADER_NAME);
     auto  cand       = collection->create();
@@ -174,41 +182,19 @@ namespace k4SimDelphes {
     // Set basic event properties
     cand.setWeight(delphesEvent->Weight);
     cand.setEventNumber(delphesEvent->Number);
-
-    // Extract LHE weights
-    if (TBranch* weightBranch = delphesTree->GetBranch("WeightLHEF")) {
-        TClonesArray* weightsArray = nullptr;
-        weightBranch->SetAddress(&weightsArray);
-        weightBranch->GetEntry(iEvent); // Use the event index from the loop
-
-        if (weightsArray && weightsArray->GetEntries() > 0) {
-            std::cout << "[DEBUG] Number of weights in WeightLHEF: " << weightsArray->GetEntries() << std::endl;
-
-            std::vector<int> weightIDs;     // Store IDs separately
-            std::vector<float> weightValues; // Store values separately
-
-            for (int i = 0; i < weightsArray->GetEntries(); ++i) {
-                if (auto* lhefWeight = static_cast<LHEFWeight*>(weightsArray->At(i))) {
-                    std::cout << "[DEBUG] Weight " << i << " -> ID: " << lhefWeight->ID
-                              << ", Value: " << lhefWeight->Weight << std::endl;
-
-                    weightIDs.push_back(lhefWeight->ID);
-                    weightValues.push_back(lhefWeight->Weight);
-                } else {
-                    std::cerr << "[ERROR] Null pointer encountered in WeightLHEF array at index " << i << std::endl;
-                }
-            }
-
-            // Store weights in the event header
-            for (float w : weightValues) {
-                cand.addToWeights(w);
-            }
-
-        } else {
-            std::cerr << "[WARNING] WeightLHEF branch is empty for this event or could not be retrieved." << std::endl;
-        }
-    } else {
-        std::cerr << "[ERROR] 'WeightLHEF' branch not found in the input TTree!" << std::endl;
+    
+    // if we have weights being read from LHE file, store them in _EventHeader_weights
+    if(lhefWeights) {
+      for (Int_t i = 0; i < lhefWeights->GetEntries(); ++i) {
+        // Cast each entry to an LHEFWeight pointer.
+        LHEFWeight* weightEntry = static_cast<LHEFWeight*>(lhefWeights->At(i));
+        std::cout << "LHEF Weight " << i 
+                  << " - ID: " << weightEntry->ID 
+                  << ", Value: " << weightEntry->Weight << std::endl;
+      
+        // append this weight to the event header
+        cand.addToWeights(weightEntry->Weight);
+      }
     }
   }
   

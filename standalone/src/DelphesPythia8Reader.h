@@ -154,12 +154,11 @@ public:
         branchWeightLHEF->Clear();
         std::cout << "[DEBUG] Calling AnalyzeWeight() for event " << m_eventCounter << std::endl;
         reader->AnalyzeWeight(branchWeightLHEF);
-        std::cout << "[DEBUG] Forcing Tree Fill for WeightLHEF branch" << std::endl;
-        m_treeWriter->Fill();
     } else {
         std::cerr << "[ERROR] branchWeightLHEF is NULL!" << std::endl;
+      }
     }
-    }
+    
     if (!m_pythia->next()) {
       // If failure because reached end of file then exit event loop
       if (m_pythia->info.atEndOfFile()) {
@@ -177,8 +176,11 @@ public:
       }
     }
     m_readStopWatch.Stop();
+    m_procStopWatch.Start();
     ConvertInput(m_eventCounter, m_pythia.get(), m_branchEvent.get(), factory, allParticleOutputArray,
                  stableParticleOutputArray, partonOutputArray, &m_readStopWatch, &m_procStopWatch);
+    // fill branches not read in by pythia (LHEF reweighting branch)
+    m_treeWriter->Fill();
     ++m_eventCounter;
     return true;
   };
