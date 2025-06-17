@@ -102,11 +102,11 @@ public:
         reader = new DelphesLHEFReader;
         reader->SetInputFile(m_inputFile);
 
-        brancheEventLHEF = m_treeWriter->NewBranch("EventLHEF", LHEFEvent::Class());
-        branchWeightLHEF = m_treeWriter->NewBranch("WeightLHEF", LHEFWeight::Class());
+        m_brancheEventLHEF = m_treeWriter->NewBranch("EventLHEF", LHEFEvent::Class());
+        m_branchWeightLHEF = m_treeWriter->NewBranch("WeightLHEF", LHEFWeight::Class());
 
-        if (!branchWeightLHEF) {
-          std::cerr << "Error: branchWeightLHEF failed to initialize." << std::endl;
+        if (!m_branchWeightLHEF) {
+          std::cerr << "Error: m_branchWeightLHEF failed to initialise." << std::endl;
         }
 
         m_allParticleOutputArrayLHEF = modularDelphes->ExportArray("allParticlesLHEF");
@@ -151,14 +151,14 @@ public:
     }
     
     // reading weights
-   if (reader) {
-    if (branchWeightLHEF) {
-        branchWeightLHEF->Clear();
-        reader->AnalyzeWeight(branchWeightLHEF);
-    } else {
-        std::cerr << "Error: branchWeightLHEF is null." << std::endl;
+    if (reader) {
+      if (m_branchWeightLHEF) {
+          m_branchWeightLHEF->Clear();
+          reader->AnalyzeWeight(m_branchWeightLHEF);
+      } else {
+          std::cerr << "Error: m_branchWeightLHEF is null." << std::endl;
+        }
       }
-    }
     
     if (!m_pythia->next()) {
       // If failure because reached end of file then exit event loop
@@ -201,7 +201,7 @@ private:
   std::unique_ptr<ExRootTreeBranch> m_branchEvent{nullptr};
   std::unique_ptr<TTree> m_converterTree{nullptr};
 
-  ExRootTreeBranch *brancheEventLHEF = 0, *branchWeightLHEF = 0;
+  ExRootTreeBranch *m_brancheEventLHEF = 0, *m_branchWeightLHEF = 0;
   TObjArray *m_stableParticleOutputArrayLHEF = 0, *m_allParticleOutputArrayLHEF = 0, *m_partonOutputArrayLHEF = 0;
   DelphesLHEFReader* reader = 0;
   Long64_t m_eventCounter{0}, m_errorCounter{0};

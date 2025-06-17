@@ -19,7 +19,7 @@ void SignalHandler(int /*si*/) { interrupted = true; }
 template <typename WriterT = podio::ROOTWriter>
 int doit(int argc, char* argv[], DelphesInputReader& inputReader) {
   using namespace k4SimDelphes;
-  
+
   // We can't make this a unique_ptr because it interferes with whatever ROOT is
   // doing under the hood to clean up
   auto* modularDelphes = new Delphes("Delphes");
