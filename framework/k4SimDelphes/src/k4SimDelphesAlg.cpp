@@ -48,7 +48,6 @@ StatusCode k4SimDelphesAlg::initialize() {
 
 StatusCode k4SimDelphesAlg::execute(const EventContext&) const {
   verbose() << "Execute k4SimDelphesAlg... " << endmsg;
-
   m_allParticleOutputArray->Clear();
   m_stableParticleOutputArray->Clear();
   m_partonOutputArray->Clear();
