@@ -80,7 +80,6 @@ void ConvertInput(Long64_t eventCounter, Pythia8::Pythia* pythia, ExRootTreeBran
 
   element->ReadTime = readStopWatch->RealTime();
   element->ProcTime = procStopWatch->RealTime();
-
   pdg = TDatabasePDG::Instance();
 
   for (int i = 1; i < pythia->event.size(); ++i) {

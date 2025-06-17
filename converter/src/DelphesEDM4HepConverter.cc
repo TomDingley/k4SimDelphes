@@ -146,7 +146,7 @@ namespace k4SimDelphes {
         lhefWeights = *(TClonesArray**)weightBranch->GetAddress();
       }
       
-      // Now pass the weights array into createEventHeader
+      // call event header fn to store weights, doesn't store (in fn) if lhefweights is empty. 
       createEventHeader(delphesEvent, lhefWeights);
     }
 
@@ -186,12 +186,8 @@ namespace k4SimDelphes {
     // if we have weights being read from LHE file, store them in _EventHeader_weights
     if(lhefWeights) {
       for (Int_t i = 0; i < lhefWeights->GetEntries(); ++i) {
-        // Cast each entry to an LHEFWeight pointer.
+        // get entry in vector
         LHEFWeight* weightEntry = static_cast<LHEFWeight*>(lhefWeights->At(i));
-        std::cout << "LHEF Weight " << i 
-                  << " - ID: " << weightEntry->ID 
-                  << ", Value: " << weightEntry->Weight << std::endl;
-      
         // append this weight to the event header
         cand.addToWeights(weightEntry->Weight);
       }

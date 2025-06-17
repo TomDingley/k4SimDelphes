@@ -67,30 +67,12 @@ template <typename WriterT = podio::ROOTWriter> int doit(int argc, char* argv[],
 
       modularDelphes->ProcessTask();
 
-      // print out LHE weights
-      TObjArray* weightArray = modularDelphes->ExportArray("WeightLHEF");
-      if (weightArray) {
-        std::cout << "[DEBUG] Number of LHEF Weights: " << weightArray->GetEntries() << std::endl;
-        for (int i = 0; i < weightArray->GetEntries(); i++) {
-          auto* weight = static_cast<LHEFWeight*>(weightArray->At(i));
-          if (weight) {
-            std::cout << "[DEBUG] Weight ID: " << weight->ID 
-                      << ", Weight Value: " << weight->Weight << std::endl;
-          }
-        }
-      } else {
-        std::cout << "[WARNING] No LHEF Weights found in Delphes output" << std::endl;
-      }
-
-      
-      
-      edm4hepConverter.process(inputReader.converterTree(), entry);
+      edm4hepConverter.process(inputReader.converterTree());
 
       // Put everything into a Frame and write it out
       podio::Frame frame;
       for (auto& [name, coll] : edm4hepConverter.getCollections()) {
         frame.put(std::move(coll), name);
-        std::cout << "Name of collection getting outputted: " << name << std::endl;
       }
       podioWriter.writeFrame(frame, "events");
 

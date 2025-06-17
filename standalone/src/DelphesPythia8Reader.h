@@ -104,9 +104,11 @@ public:
 
         brancheEventLHEF = m_treeWriter->NewBranch("EventLHEF", LHEFEvent::Class());
         branchWeightLHEF = m_treeWriter->NewBranch("WeightLHEF", LHEFWeight::Class());
+
         if (!branchWeightLHEF) {
-          std::cerr << "[ERROR] branchWeightLHEF failed to initialize!" << std::endl;
+          std::cerr << "Error: branchWeightLHEF failed to initialize." << std::endl;
         }
+
         m_allParticleOutputArrayLHEF    = modularDelphes->ExportArray("allParticlesLHEF");
         m_stableParticleOutputArrayLHEF = modularDelphes->ExportArray("stableParticlesLHEF");
         m_partonOutputArrayLHEF         = modularDelphes->ExportArray("partonsLHEF");
@@ -152,10 +154,9 @@ public:
    if (reader) {
     if (branchWeightLHEF) {
         branchWeightLHEF->Clear();
-        std::cout << "[DEBUG] Calling AnalyzeWeight() for event " << m_eventCounter << std::endl;
         reader->AnalyzeWeight(branchWeightLHEF);
     } else {
-        std::cerr << "[ERROR] branchWeightLHEF is NULL!" << std::endl;
+        std::cerr << "Error: branchWeightLHEF is null." << std::endl;
       }
     }
     
@@ -179,6 +180,7 @@ public:
     m_procStopWatch.Start();
     ConvertInput(m_eventCounter, m_pythia.get(), m_branchEvent.get(), factory, allParticleOutputArray,
                  stableParticleOutputArray, partonOutputArray, &m_readStopWatch, &m_procStopWatch);
+
     // fill branches not read in by pythia (LHEF reweighting branch)
     m_treeWriter->Fill();
     ++m_eventCounter;
