@@ -150,7 +150,7 @@ public:
       }
     }
     
-    //  TOM: reading weights
+    // reading weights
    if (reader) {
     if (branchWeightLHEF) {
         branchWeightLHEF->Clear();
@@ -199,7 +199,6 @@ private:
   TStopwatch                        m_readStopWatch, m_procStopWatch;
   ExRootTreeWriter*                 m_treeWriter{nullptr};
   std::unique_ptr<ExRootTreeBranch> m_branchEvent{nullptr};
-  ExRootTreeBranch *branchEventLHEF = 0, *branchWeight = 0;
   std::unique_ptr<TTree>            m_converterTree{nullptr};
 
   ExRootTreeBranch *brancheEventLHEF = 0, *branchWeightLHEF = 0;

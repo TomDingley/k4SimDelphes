@@ -18,7 +18,6 @@ void        SignalHandler(int /*si*/) { interrupted = true; }
 template <typename WriterT = podio::ROOTWriter> int doit(int argc, char* argv[], DelphesInputReader& inputReader) {
   using namespace k4SimDelphes;
   
-  std::cout << "[DEBUG] doit() has been called!" << std::endl;
   // We can't make this a unique_ptr because it interferes with whatever ROOT is
   // doing under the hood to clean up
   auto*      modularDelphes = new Delphes("Delphes");
@@ -66,7 +65,6 @@ template <typename WriterT = podio::ROOTWriter> int doit(int argc, char* argv[],
       }
 
       modularDelphes->ProcessTask();
-
       edm4hepConverter.process(inputReader.converterTree());
 
       // Put everything into a Frame and write it out
