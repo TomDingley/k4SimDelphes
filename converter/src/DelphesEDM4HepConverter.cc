@@ -14,9 +14,8 @@
 #include "edm4hep/TrackCollection.h"
 #include "edm4hep/TrackerHit3DCollection.h"
 #include "edm4hep/Vector3d.h"
-
+#include "edm4hep/Constants.h"
 #include "podio/UserDataCollection.h"
-
 #include <TMatrixDSym.h>
 
 #include <iostream>
@@ -177,17 +176,26 @@ void DelphesEDM4HepConverter::createEventHeader(const HepMCEvent* delphesEvent, 
   auto* collection = createCollection<edm4hep::EventHeaderCollection>(EVENTHEADER_NAME);
   auto cand = collection->create();
 
-  // Set basic event properties
+  // Set basic event info
   cand.setWeight(delphesEvent->Weight);
   cand.setEventNumber(delphesEvent->Number);
 
-  // if we have weights being read from LHE file, store them in _EventHeader_weights
   if (lhefWeights) {
     for (Int_t i = 0; i < lhefWeights->GetEntries(); ++i) {
-      // get entry in vector
-      LHEFWeight* weightEntry = static_cast<LHEFWeight*>(lhefWeights->At(i));
-      // append this weight to the event header
-      cand.addToWeights(weightEntry->Weight);
+      auto* weightEntry = static_cast<LHEFWeight*>(lhefWeights->At(i));
+      cand.addToWeights(weightEntry->Weight);  // always store the value
+
+      // Only collect names once (e.g. for metadata)
+      if (!m_storedWeightNames) {
+        // Use index if ID is invalid or always zero
+        std::string name = "wgt_" + std::to_string(i);
+        m_weightNames.push_back(name);
+      }
+    }
+
+    // Mark weight names as stored, once per job
+    if (!m_storedWeightNames) {
+      m_storedWeightNames = true;
     }
   }
 }

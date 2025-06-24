@@ -59,6 +59,7 @@ int doit(int argc, char* argv[], DelphesInputReader& inputReader) {
     const int maxEvents = confReader->GetInt("::MaxEvents", 0);
     ExRootProgressBar progressBar(-1);
     Int_t eventCounter = 0;
+    bool weightNamesWritten = false;
     for (Int_t entry = 0; !inputReader.finished() && (maxEvents > 0 ? entry < maxEvents : true) && !interrupted;
          ++entry) {
       if (!inputReader.readEvent(modularDelphes, allParticleOutputArray, stableParticleOutputArray,
@@ -73,6 +74,13 @@ int doit(int argc, char* argv[], DelphesInputReader& inputReader) {
       podio::Frame frame;
       for (auto& [name, coll] : edm4hepConverter.getCollections()) {
         frame.put(std::move(coll), name);
+      }
+      // LHEF event weight names
+      const auto& weightNames = edm4hepConverter.getWeightNames();
+      if (!weightNamesWritten && !weightNames.empty()) {
+        std::cout << "** Writing LHEF weight names: " << weightNames.size() << std::endl;
+        frame.putParameter<std::vector<std::string>>(edm4hep::labels::EventWeightsNames, weightNames);
+        weightNamesWritten = true;
       }
       podioWriter.writeFrame(frame, "events");
 

@@ -5,9 +5,11 @@
 #include "edm4hep/MCParticle.h"
 #include "edm4hep/MutableReconstructedParticle.h"
 #include "edm4hep/RecoMCParticleLinkCollection.h"
-
+#include "edm4hep/Constants.h"
 // podio
 #include "podio/CollectionBase.h"
+#include "podio/Frame.h"
+
 
 // ROOT
 #include "TClonesArray.h"
@@ -101,7 +103,9 @@ public:
    * process.
    */
   CollectionMapT getCollections() { return std::move(m_collections); }
-
+  // declare fn to get LHEF weight ID
+  const std::vector<std::string>& getWeightNames() const {return m_weightNames;}
+  
   edm4hep::RecoMCParticleLinkCollection*
   createExternalRecoMCLinks(const std::unordered_map<UInt_t, edm4hep::MCParticle>& mc_map);
 
@@ -145,6 +149,10 @@ private:
   CollectionT* getCollection(const std::string& name) {
     return static_cast<CollectionT*>(m_collections[name].get());
   }
+
+  // declare weight names
+  std::vector<std::string> m_weightNames{};
+  bool m_storedWeightNames{false};
 
   // cannot mark DelphesT as const, because for Candidate* the GetCandidates()
   // method is not marked as const.
