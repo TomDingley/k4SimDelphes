@@ -136,16 +136,16 @@ void DelphesEDM4HepConverter::process(TTree* delphesTree) {
   auto* eventBranch = delphesTree->GetBranch("Event");
   if (eventBranch) {
     auto* delphesEvents = *(TClonesArray**)eventBranch->GetAddress();
-    auto* delphesEvent  = static_cast<HepMCEvent*>(delphesEvents->At(0));
-    
+    auto* delphesEvent = static_cast<HepMCEvent*>(delphesEvents->At(0));
+
     // Retrieve the weights array from the "WeightLHEF" branch
     auto* weightBranch = delphesTree->GetBranch("WeightLHEF");
     TClonesArray* lhefWeights = nullptr;
     if (weightBranch) {
       lhefWeights = *(TClonesArray**)weightBranch->GetAddress();
     }
-    
-    // call event header fn to store weights, doesn't store (in fn) if lhefweights is empty. 
+
+    // call event header fn to store weights, doesn't store (in fn) if lhefweights is empty.
     createEventHeader(delphesEvent, lhefWeights);
   }
 

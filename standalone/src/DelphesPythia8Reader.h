@@ -149,17 +149,17 @@ public:
         fillParticle(m_spareMode1, m_spareParm1, m_spareParm2, m_pythia->event, m_pythia->particleData, m_pythia->rndm);
       }
     }
-    
+
     // reading weights
     if (reader) {
       if (m_branchWeightLHEF) {
-          m_branchWeightLHEF->Clear();
-          reader->AnalyzeWeight(m_branchWeightLHEF);
+        m_branchWeightLHEF->Clear();
+        reader->AnalyzeWeight(m_branchWeightLHEF);
       } else {
-          std::cerr << "Error: m_branchWeightLHEF is null." << std::endl;
-        }
+        std::cerr << "Error: m_branchWeightLHEF is null." << std::endl;
       }
-    
+    }
+
     if (!m_pythia->next()) {
       // If failure because reached end of file then exit event loop
       if (m_pythia->info.atEndOfFile()) {
